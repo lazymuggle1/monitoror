@@ -2,7 +2,7 @@ package config
 
 type (
 	TravisCI struct {
-		URL         string `validate:"required,url"`
+		URL         string `validate:"required,url,http"`
 		Token       string
 		GithubToken string
 		Timeout     int `validate:"gte=0"` // In Millisecond

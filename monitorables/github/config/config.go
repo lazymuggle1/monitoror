@@ -2,7 +2,7 @@ package config
 
 type (
 	Github struct {
-		URL                  string `validate:"required,url"`
+		URL                  string `validate:"required,url,http"`
 		Token                string `validate:"required"`
 		Timeout              int    `validate:"gte=0"` // In Millisecond
 		CountCacheExpiration int    `validate:"gte=0"` // In Millisecond

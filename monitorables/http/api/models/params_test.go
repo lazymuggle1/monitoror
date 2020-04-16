@@ -42,6 +42,7 @@ func TestHTTPParams_GetFormat(t *testing.T) {
 	} {
 		errors := testcase.params.Validate()
 		if testcase.valid {
+			assert.NotEmpty(t, testcase.params.(GenericParamsProvider).GetURL())
 			assert.Empty(t, errors)
 		} else {
 			assert.NotEmpty(t, errors)

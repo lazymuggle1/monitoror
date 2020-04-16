@@ -10,7 +10,7 @@ import (
 
 type (
 	HTTPRawParams struct {
-		URL           string `json:"url" query:"url" validate:"required,url"`
+		URL           string `json:"url" query:"url" validate:"required,url,http"`
 		Regex         string `json:"regex,omitempty" query:"regex" validate:"regex"`
 		StatusCodeMin *int   `json:"statusCodeMin,omitempty" query:"statusCodeMin"`
 		StatusCodeMax *int   `json:"statusCodeMax,omitempty" query:"statusCodeMax"`
@@ -19,7 +19,6 @@ type (
 
 func (p *HTTPRawParams) Validate() []validator.Error {
 	errors := validator.Validate(p)
-	errors = append(errors, validateURL(p)...)
 	errors = append(errors, validateStatusCode(p)...)
 	return errors
 }

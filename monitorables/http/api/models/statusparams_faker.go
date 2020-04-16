@@ -9,7 +9,7 @@ import (
 
 type (
 	HTTPStatusParams struct {
-		URL           string `json:"url" query:"url" validate:"required,url"`
+		URL           string `json:"url" query:"url" validate:"required,url,http"`
 		StatusCodeMin *int   `json:"statusCodeMin,omitempty" query:"statusCodeMin"`
 		StatusCodeMax *int   `json:"statusCodeMax,omitempty" query:"statusCodeMax"`
 
@@ -20,7 +20,6 @@ type (
 
 func (p *HTTPStatusParams) Validate() []validator.Error {
 	errors := validator.Validate(p)
-	errors = append(errors, validateURL(p)...)
 	errors = append(errors, validateStatusCode(p)...)
 	return errors
 }

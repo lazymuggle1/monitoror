@@ -2,22 +2,30 @@ package validator
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 
 	"github.com/monitoror/monitoror/pkg/humanize"
 )
 
-var (
+const (
 	regexTag = "regex"
+	httpTag  = "http"
+)
 
+var (
 	validatorTagMapping = map[string]ErrorID{
 		"required": ErrorRequired,
+		"eq":       ErrorEq,
+		"ne":       ErrorNE,
+		"oneof":    ErrorOneOf,
 		"gte":      ErrorGTE,
 		"gt":       ErrorGT,
 		"lte":      ErrorLTE,
 		"lt":       ErrorLT,
 		"url":      ErrorURL,
+		httpTag:    ErrorHTTP,
 		regexTag:   ErrorRegex,
 	}
 )
@@ -27,7 +35,8 @@ var validate *validator.Validate
 
 func init() {
 	validate = validator.New()
-	_ = validate.RegisterValidation(regexTag, ValidateRegex)
+	_ = validate.RegisterValidation(httpTag, validateHTTP)
+	_ = validate.RegisterValidation(regexTag, validateRegex)
 }
 
 func Validate(s interface{}) []Error {
@@ -38,7 +47,7 @@ func Validate(s interface{}) []Error {
 		for _, err := range err.(validator.ValidationErrors) {
 			id, exists := validatorTagMapping[err.Tag()]
 			if !exists {
-				panic("unsupported validate tag. used tag listed in validatorTagMapping instead.")
+				panic("unsupported validate tag. use a tag listed in validatorTagMapping instead.")
 			}
 
 			e := Error{
@@ -55,8 +64,13 @@ func Validate(s interface{}) []Error {
 	return errors
 }
 
-// ValidateRegex implements validator.Func
-func ValidateRegex(fl validator.FieldLevel) bool {
+// validateRegex implements validator.Func
+func validateRegex(fl validator.FieldLevel) bool {
 	_, err := regexp.Compile(fl.Field().String())
 	return err == nil
+}
+
+// validateHTTP implements validator.Func
+func validateHTTP(fl validator.FieldLevel) bool {
+	return strings.HasPrefix(fl.Field().String(), "http://") || strings.HasPrefix(fl.Field().String(), "https://")
 }

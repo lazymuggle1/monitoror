@@ -28,6 +28,21 @@ func TestError(t *testing.T) {
 			expected: "",
 		},
 		{
+			err:      &Error{ErrorID: ErrorOneOf, FieldName: "test", tagParam: "test"},
+			message:  `Invalid "test" field. Must be one of [test].`,
+			expected: `test`,
+		},
+		{
+			err:      &Error{ErrorID: ErrorEq, FieldName: "test", tagParam: "1"},
+			message:  `Invalid "test" field. Must be equal to 1.`,
+			expected: `test = 1`,
+		},
+		{
+			err:      &Error{ErrorID: ErrorNE, FieldName: "test", tagParam: "1"},
+			message:  `Invalid "test" field. Must be not equal to 1.`,
+			expected: `test != 1`,
+		},
+		{
 			err:      &Error{ErrorID: ErrorGT, FieldName: "test", tagParam: "1"},
 			message:  `Invalid "test" field. Must be greater than 1.`,
 			expected: `test > 1`,
@@ -50,6 +65,11 @@ func TestError(t *testing.T) {
 		{
 			err:      &Error{ErrorID: ErrorURL, FieldName: "test"},
 			message:  `Invalid "test" field. Must be a valid URL.`,
+			expected: "",
+		},
+		{
+			err:      &Error{ErrorID: ErrorHTTP, FieldName: "test"},
+			message:  `Invalid "test" field. Must be start with "http://" or "https://".`,
 			expected: "",
 		},
 		{

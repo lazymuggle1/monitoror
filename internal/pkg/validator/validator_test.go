@@ -8,14 +8,18 @@ import (
 )
 
 type Params struct {
-	URL    *string `validate:"required,url"`
-	Token  string  `validate:"required"`
-	Value1 int     `validate:"gt=-1"`
-	Value2 int     `validate:"gte=0"`
-	Value3 int     `validate:"lt=1"`
-	Value4 int     `validate:"lte=0"`
-	Regex  string  `validate:"regex"`
-	Other  string
+	URL              *string `validate:"required,url,http"`
+	Token            string  `validate:"required"`
+	Equal            int     `validate:"eq=0"`
+	NotEqual         int     `validate:"ne=1"`
+	GreaterThan      int     `validate:"gt=-1"`
+	GreaterThanEqual int     `validate:"gte=0"`
+	LessThan         int     `validate:"lt=1"`
+	LessThanEqual    int     `validate:"lte=0"`
+	Omitempty        *int    `validate:"omitempty,gt=0"`
+	OneOf            string  `validate:"omitempty,oneof=test"`
+	Regex            string  `validate:"regex"`
+	Other            string
 }
 
 type ErroredTagParams struct {
@@ -50,6 +54,15 @@ func TestValidate_WithError(t *testing.T) {
 		},
 		{
 			params: &Params{
+				URL:   pointer.ToString("ftp://exemple.com"),
+				Token: "xxx",
+			},
+			errorID:        ErrorHTTP,
+			errorFieldName: "URL",
+			errorValue:     "ftp://exemple.com",
+		},
+		{
+			params: &Params{
 				URL: pointer.ToString("http://exemple.com"),
 			},
 			errorID:        ErrorRequired,
@@ -57,47 +70,91 @@ func TestValidate_WithError(t *testing.T) {
 		},
 		{
 			params: &Params{
-				URL:    pointer.ToString("http://exemple.com"),
-				Token:  "xxxx",
-				Value1: -1000,
+				URL:   pointer.ToString("http://exemple.com"),
+				Token: "xxxx",
+				Equal: 1000,
+			},
+			errorID:        ErrorEq,
+			errorFieldName: "Equal",
+			errorValue:     "1000",
+			errorExpected:  "Equal = 0",
+		},
+		{
+			params: &Params{
+				URL:      pointer.ToString("http://exemple.com"),
+				Token:    "xxxx",
+				NotEqual: 1,
+			},
+			errorID:        ErrorNE,
+			errorFieldName: "NotEqual",
+			errorValue:     "1",
+			errorExpected:  "NotEqual != 1",
+		},
+		{
+			params: &Params{
+				URL:         pointer.ToString("http://exemple.com"),
+				Token:       "xxxx",
+				GreaterThan: -1000,
 			},
 			errorID:        ErrorGT,
-			errorFieldName: "Value1",
+			errorFieldName: "GreaterThan",
 			errorValue:     "-1000",
-			errorExpected:  "Value1 > -1",
+			errorExpected:  "GreaterThan > -1",
 		},
 		{
 			params: &Params{
-				URL:    pointer.ToString("http://exemple.com"),
-				Token:  "xxxx",
-				Value2: -1000,
+				URL:              pointer.ToString("http://exemple.com"),
+				Token:            "xxxx",
+				GreaterThanEqual: -1000,
 			},
 			errorID:        ErrorGTE,
-			errorFieldName: "Value2",
+			errorFieldName: "GreaterThanEqual",
 			errorValue:     "-1000",
-			errorExpected:  "Value2 >= 0",
+			errorExpected:  "GreaterThanEqual >= 0",
 		},
 		{
 			params: &Params{
-				URL:    pointer.ToString("http://exemple.com"),
-				Token:  "xxxx",
-				Value3: 1000,
+				URL:      pointer.ToString("http://exemple.com"),
+				Token:    "xxxx",
+				LessThan: 1000,
 			},
 			errorID:        ErrorLT,
-			errorFieldName: "Value3",
+			errorFieldName: "LessThan",
 			errorValue:     "1000",
-			errorExpected:  "Value3 < 1",
+			errorExpected:  "LessThan < 1",
 		},
 		{
 			params: &Params{
-				URL:    pointer.ToString("http://exemple.com"),
-				Token:  "xxxx",
-				Value4: 1000,
+				URL:           pointer.ToString("http://exemple.com"),
+				Token:         "xxxx",
+				LessThanEqual: 1000,
 			},
 			errorID:        ErrorLTE,
-			errorFieldName: "Value4",
+			errorFieldName: "LessThanEqual",
 			errorValue:     "1000",
-			errorExpected:  "Value4 <= 0",
+			errorExpected:  "LessThanEqual <= 0",
+		},
+		{
+			params: &Params{
+				URL:       pointer.ToString("http://exemple.com"),
+				Token:     "xxxx",
+				Omitempty: pointer.ToInt(0),
+			},
+			errorID:        ErrorGT,
+			errorFieldName: "Omitempty",
+			errorValue:     "0",
+			errorExpected:  "Omitempty > 0",
+		},
+		{
+			params: &Params{
+				URL:   pointer.ToString("http://exemple.com"),
+				Token: "xxxx",
+				OneOf: "test2",
+			},
+			errorID:        ErrorOneOf,
+			errorFieldName: "OneOf",
+			errorValue:     "test2",
+			errorExpected:  "test",
 		},
 		{
 			params: &Params{

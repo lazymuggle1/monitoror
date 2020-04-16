@@ -2,7 +2,7 @@ package config
 
 type (
 	Pingdom struct {
-		URL             string `validate:"required,url"`
+		URL             string `validate:"required,url,http"`
 		Token           string `validate:"required"`
 		Timeout         int    `validate:"gte=0"` // In Millisecond
 		CacheExpiration int    `validate:"gte=0"` // In Millisecond

@@ -3,9 +3,7 @@ package models
 import (
 	"fmt"
 	"regexp"
-	"strings"
 
-	pkgConfig "github.com/monitoror/monitoror/internal/pkg/api/config"
 	"github.com/monitoror/monitoror/internal/pkg/validator"
 )
 
@@ -39,42 +37,9 @@ const (
 	XMLFormat  Format = "XML"
 )
 
-var supportedFormats = map[Format]bool{
-	JSONFormat: true,
-	YAMLFormat: true,
-	XMLFormat:  true,
-}
-
-func validateURL(params GenericParamsProvider) []validator.Error {
-	u := params.GetURL()
-	if !strings.HasPrefix(u, "http://") && !strings.HasPrefix(u, "https://") {
-		return []validator.Error{*validator.NewError("URL", u, "")}
-	}
-
-	return nil
-}
-
 func validateStatusCode(params GenericParamsProvider) []validator.Error {
 	if min, max := params.GetStatusCodes(); min > max {
 		return []validator.Error{*validator.NewError("statusCodeMin", fmt.Sprint(min), "statusCodeMin <= statusCodeMax")}
-	}
-
-	return nil
-}
-
-func validateKey(params FormattedParamsProvider) []validator.Error {
-	key := params.GetKey()
-	if key == "." {
-		return []validator.Error{*validator.NewError("Key", key, `key != "."`)}
-	}
-
-	return nil
-}
-
-func validateFormat(params FormattedParamsProvider) []validator.Error {
-	format := params.GetFormat()
-	if find := supportedFormats[format]; !find {
-		return []validator.Error{*validator.NewError("Format", string(format), pkgConfig.Keys(supportedFormats))}
 	}
 
 	return nil
@@ -94,8 +59,8 @@ func getStatusCodesWithDefault(statusCodeMin, statusCodeMax *int) (min int, max 
 
 func getRegexp(regex string) *regexp.Regexp {
 	if regex != "" {
-		regexp, _ := regexp.Compile(regex) // Already validate by validateRegex
-		return regexp
+		r, _ := regexp.Compile(regex) // Already validate by validateRegex
+		return r
 	}
 	return nil
 }

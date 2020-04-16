@@ -41,6 +41,7 @@ func (cu *configUsecase) Verify(configBag *models.ConfigBag) {
 		return
 	}
 
+	// REMOVE
 	if configBag.Config.Columns == nil {
 		configBag.AddErrors(models.ConfigError{
 			ID:      models.ConfigErrorMissingRequiredField,
@@ -49,6 +50,8 @@ func (cu *configUsecase) Verify(configBag *models.ConfigBag) {
 				FieldName: "columns",
 			},
 		})
+
+		// REMOVE
 	} else if *configBag.Config.Columns <= 0 {
 		configBag.AddErrors(models.ConfigError{
 			ID:      models.ConfigErrorInvalidFieldValue,
@@ -61,6 +64,7 @@ func (cu *configUsecase) Verify(configBag *models.ConfigBag) {
 		})
 	}
 
+	// REMOVE
 	if configBag.Config.Zoom != nil && (*configBag.Config.Zoom <= 0 || *configBag.Config.Zoom > 10) {
 		configBag.AddErrors(models.ConfigError{
 			ID:      models.ConfigErrorInvalidFieldValue,
@@ -73,6 +77,7 @@ func (cu *configUsecase) Verify(configBag *models.ConfigBag) {
 		})
 	}
 
+	// REMOVE
 	if configBag.Config.Tiles == nil {
 		configBag.AddErrors(models.ConfigError{
 			ID:      models.ConfigErrorMissingRequiredField,
@@ -81,6 +86,7 @@ func (cu *configUsecase) Verify(configBag *models.ConfigBag) {
 				FieldName: "tiles",
 			},
 		})
+		// REMOVE
 	} else if len(configBag.Config.Tiles) == 0 {
 		configBag.AddErrors(models.ConfigError{
 			ID:      models.ConfigErrorInvalidFieldValue,
@@ -99,6 +105,7 @@ func (cu *configUsecase) Verify(configBag *models.ConfigBag) {
 }
 
 func (cu *configUsecase) verifyTile(configBag *models.ConfigBag, tile *models.TileConfig, groupTile *models.TileConfig) {
+	// REMOVE
 	if tile.ColumnSpan != nil && *tile.ColumnSpan <= 0 {
 		configBag.AddErrors(models.ConfigError{
 			ID:      models.ConfigErrorInvalidFieldValue,
@@ -111,6 +118,7 @@ func (cu *configUsecase) verifyTile(configBag *models.ConfigBag, tile *models.Ti
 		})
 	}
 
+	// REMOVE
 	if tile.RowSpan != nil && *tile.RowSpan <= 0 {
 		configBag.AddErrors(models.ConfigError{
 			ID:      models.ConfigErrorInvalidFieldValue,

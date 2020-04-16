@@ -2,7 +2,7 @@ package config
 
 type (
 	Jenkins struct {
-		URL       string `validate:"required,url"`
+		URL       string `validate:"required,url,http"`
 		Login     string
 		Token     string
 		Timeout   int `validate:"gte=0"` // In Millisecond

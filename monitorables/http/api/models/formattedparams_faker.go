@@ -11,9 +11,9 @@ import (
 
 type (
 	HTTPFormattedParams struct {
-		URL           string `json:"url" query:"url" validate:"required,url"`
-		Format        Format `json:"format" query:"format" validate:"required"`
-		Key           string `json:"key" query:"key" validate:"required"`
+		URL           string `json:"url" query:"url" validate:"required,url,http"`
+		Format        Format `json:"format" query:"format" validate:"required,oneof=JSON YAML XML"`
+		Key           string `json:"key" query:"key" validate:"required,ne=."`
 		Regex         string `json:"regex,omitempty" query:"regex" validate:"regex"`
 		StatusCodeMin *int   `json:"statusCodeMin,omitempty" query:"statusCodeMin"`
 		StatusCodeMax *int   `json:"statusCodeMax,omitempty" query:"statusCodeMax"`
@@ -27,10 +27,7 @@ type (
 
 func (p *HTTPFormattedParams) Validate() []validator.Error {
 	errors := validator.Validate(p)
-	errors = append(errors, validateURL(p)...)
 	errors = append(errors, validateStatusCode(p)...)
-	errors = append(errors, validateFormat(p)...)
-	errors = append(errors, validateKey(p)...)
 	return errors
 }
 

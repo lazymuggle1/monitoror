@@ -16,6 +16,8 @@ const (
 	EmptyTileType coreModels.TileType = "EMPTY"
 	GroupTileType coreModels.TileType = "GROUP"
 
+	MinimalVersionTag = "minimalVersion"
+
 	TileGeneratorStoreKeyPrefix = "monitoror.config.tileGenerator.key"
 )
 

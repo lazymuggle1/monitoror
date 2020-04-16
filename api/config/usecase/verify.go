@@ -326,14 +326,31 @@ func (cu *configUsecase) verifyTile(configBag *models.ConfigBag, tile *models.Ti
 		}
 	}
 
-	// TODO Check minimalVersion tag
+	// Lookup on each Fields if they have "minimalVersion" tag and check if config version match
+	// ex: Field1 string `minimalVersion:"1.0"`
+	for _, field := range structs.Fields(rInstance) {
+		if minimalVersion := field.Tag(MinimalVersionTag); minimalVersion != "" {
+			if configBag.Config.Version.IsLessThan(models.RawVersion(minimalVersion)) {
+				jsonFieldName := pkgConfig.GetJSONFieldName(field)
 
-	// Validate params
-	if vErrors := rInstance.(models.ParamsValidator).Validate(); len(vErrors) > 0 {
-		for _, vError := range vErrors {
-			configError := convertValidatorError(&vError, tile, rInstance)
-			configBag.AddErrors(*configError)
+				configBag.AddErrors(models.ConfigError{
+					ID: models.ConfigErrorUnsupportedTileParamInThisVersion,
+					Message: fmt.Sprintf(`%q field is not supported in version %q. Minimal supported version is %q`,
+						jsonFieldName, configBag.Config.Version, minimalVersion),
+					Data: models.ConfigErrorData{
+						FieldName:     jsonFieldName,
+						ConfigExtract: pkgConfig.Stringify(tile),
+						Expected:      fmt.Sprintf(`version >= %q`, minimalVersion),
+					},
+				})
+			}
 		}
+	}
+
+	// Validate params instance and convert validator errors into ConfigError and add them into configBag
+	for _, vError := range rInstance.(models.ParamsValidator).Validate() {
+		configError := convertValidatorError(&vError, tile, rInstance)
+		configBag.AddErrors(*configError)
 	}
 }
 
@@ -353,7 +370,7 @@ func convertValidatorError(vError *validator.Error, tile *models.TileConfig, par
 	for _, field := range structs.Fields(paramsInstance) {
 		if field.Name() == vError.FieldName {
 			// Replace FieldName By json FieldName
-			vError.FieldName = strings.Split(field.Tag("json"), ",")[0]
+			vError.FieldName = pkgConfig.GetJSONFieldName(field)
 			break
 		}
 	}
@@ -372,7 +389,7 @@ func convertValidatorError(vError *validator.Error, tile *models.TileConfig, par
 	if len(tile.Params) == 0 {
 		for _, field := range structs.Fields(tile) {
 			if reflect.DeepEqual(field.Value(), tile.Params) {
-				paramName := strings.Split(field.Tag("json"), ",")[0]
+				paramName := pkgConfig.GetJSONFieldName(field)
 				configError.Data.ConfigExtract = strings.TrimSuffix(configError.Data.ConfigExtract, "}")
 				configError.Data.ConfigExtract = fmt.Sprintf(`%s,"%s":{}}`, configError.Data.ConfigExtract, paramName)
 				break

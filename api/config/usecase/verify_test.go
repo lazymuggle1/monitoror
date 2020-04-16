@@ -7,6 +7,7 @@ import (
 
 	"github.com/monitoror/monitoror/api/config/models"
 	"github.com/monitoror/monitoror/api/config/versions"
+	"github.com/monitoror/monitoror/internal/pkg/validator"
 	coreModels "github.com/monitoror/monitoror/models"
 	jenkinsApi "github.com/monitoror/monitoror/monitorables/jenkins/api"
 	jenkinsModels "github.com/monitoror/monitoror/monitorables/jenkins/api/models"
@@ -431,5 +432,27 @@ func TestUsecase_VerifyTile_WithGenerator_WithWrongVariant(t *testing.T) {
 		assert.Equal(t, `"test"`, conf.Errors[0].Data.Value)
 		assert.Contains(t, conf.Errors[0].Data.Expected, coreModels.DefaultVariant)
 		assert.Equal(t, `{"type":"GENERATE:JENKINS-BUILD","params":{"job":"job1"},"configVariant":"test"}`, conf.Errors[0].Data.ConfigExtract)
+	}
+}
+
+type minimalVersionTest struct {
+	Field1 string `json:"field1" minimalVersion:"999.0"`
+}
+
+func (s *minimalVersionTest) Validate() []validator.Error { return nil }
+
+func TestUsecase_VerifyTile_FieldMinimalVersion(t *testing.T) {
+	rawConfig := `{ "type": "TEST", "params": { "field1": "server.com" } }`
+	tile, conf := initConfig(t, rawConfig)
+	usecase := initConfigUsecase(nil)
+	usecase.registry.RegisterTile("TEST", versions.MinimalVersion, []coreModels.VariantName{coreModels.DefaultVariant}).
+		Enable(coreModels.DefaultVariant, &minimalVersionTest{}, "/test/default/test")
+
+	usecase.verifyTile(conf, tile, nil)
+
+	if assert.Len(t, conf.Errors, 1) {
+		assert.Equal(t, models.ConfigErrorUnsupportedTileParamInThisVersion, conf.Errors[0].ID)
+		assert.Equal(t, "field1", conf.Errors[0].Data.FieldName)
+		assert.Equal(t, `{"type":"TEST","params":{"field1":"server.com"},"configVariant":"default"}`, conf.Errors[0].Data.ConfigExtract)
 	}
 }

@@ -12,9 +12,9 @@ import (
 
 type (
 	BuildParams struct {
-		Owner      string `json:"owner" query:"owner"`
-		Repository string `json:"repository" query:"repository"`
-		Branch     string `json:"branch" query:"branch"`
+		Owner      string `json:"owner" query:"owner" validate:"required"`
+		Repository string `json:"repository" query:"repository" validate:"required"`
+		Branch     string `json:"branch" query:"branch" validate:"required"`
 
 		AuthorName      string `json:"authorName" query:"authorName"`
 		AuthorAvatarURL string `json:"authorAvatarURL" query:"authorAvatarURL"`

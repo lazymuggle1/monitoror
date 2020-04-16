@@ -48,7 +48,14 @@ func (m *Monitorable) GetVariantsNames() []coreModels.VariantName {
 	return pkgMonitorable.GetVariants(m.config)
 }
 
-func (m *Monitorable) Validate(_ coreModels.VariantName) (bool, error) {
+func (m *Monitorable) Validate(variantName coreModels.VariantName) (bool, []error) {
+	conf := m.config[variantName]
+
+	// Validate Config
+	if errors := pkgMonitorable.ValidateConfig(conf, variantName); errors != nil {
+		return false, errors
+	}
+
 	return system.IsRawSocketAvailable(), nil
 }
 

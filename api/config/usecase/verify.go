@@ -11,6 +11,7 @@ import (
 	"github.com/monitoror/monitoror/api/config/models"
 	"github.com/monitoror/monitoror/api/config/versions"
 	pkgConfig "github.com/monitoror/monitoror/internal/pkg/api/config"
+	"github.com/monitoror/monitoror/internal/pkg/validator"
 	coreModels "github.com/monitoror/monitoror/models"
 	"github.com/monitoror/monitoror/service/registry"
 )
@@ -325,23 +326,59 @@ func (cu *configUsecase) verifyTile(configBag *models.ConfigBag, tile *models.Ti
 		}
 	}
 
-	// Validate config with the config file version
-	if err := rInstance.(models.ParamsValidator).Validate(configBag.Config.Version); err != nil {
-		// Inject Config Extract
-		err.Data.ConfigExtract = pkgConfig.Stringify(tile)
+	// TODO Check minimalVersion tag
 
-		// UX HACK: if params is empty, inject "params: {}" to help users
-		if len(tile.Params) == 0 {
-			for _, value := range structs.Fields(tile) {
-				if reflect.DeepEqual(value.Value(), tile.Params) {
-					paramName := strings.Split(value.Tag("json"), ",")[0]
+	// Validate params
+	if vErrors := rInstance.(models.ParamsValidator).Validate(); len(vErrors) > 0 {
+		for _, vError := range vErrors {
+			configError := convertValidatorError(&vError, tile, rInstance)
+			configBag.AddErrors(*configError)
+		}
+	}
+}
 
-					err.Data.ConfigExtract = strings.TrimSuffix(err.Data.ConfigExtract, "}")
-					err.Data.ConfigExtract = fmt.Sprintf(`%s,"%s":{}}`, err.Data.ConfigExtract, paramName)
-				}
+// convertValidatorError into models.ConfigError
+func convertValidatorError(vError *validator.Error, tile *models.TileConfig, paramsInstance interface{}) *models.ConfigError {
+	configError := &models.ConfigError{Data: models.ConfigErrorData{}}
+
+	// Convert Error ID
+	switch vError.ErrorID {
+	case validator.ErrorRequired:
+		configError.ID = models.ConfigErrorMissingRequiredField
+	default:
+		configError.ID = models.ConfigErrorInvalidFieldValue
+	}
+
+	// Convert FieldName into json fieldName
+	for _, field := range structs.Fields(paramsInstance) {
+		if field.Name() == vError.FieldName {
+			// Replace FieldName By json FieldName
+			vError.FieldName = strings.Split(field.Tag("json"), ",")[0]
+			break
+		}
+	}
+	configError.Data.FieldName = vError.FieldName
+
+	// Convert Message
+	configError.Message = vError.Error()
+
+	// Convert Expected
+	configError.Data.Expected = vError.Expected()
+
+	// Inject Config Extract
+	configError.Data.ConfigExtract = pkgConfig.Stringify(tile)
+
+	// UX HACK: if params is empty, inject "params:{}" to help users
+	if len(tile.Params) == 0 {
+		for _, field := range structs.Fields(tile) {
+			if reflect.DeepEqual(field.Value(), tile.Params) {
+				paramName := strings.Split(field.Tag("json"), ",")[0]
+				configError.Data.ConfigExtract = strings.TrimSuffix(configError.Data.ConfigExtract, "}")
+				configError.Data.ConfigExtract = fmt.Sprintf(`%s,"%s":{}}`, configError.Data.ConfigExtract, paramName)
+				break
 			}
 		}
-
-		configBag.AddErrors(*err)
 	}
+
+	return configError
 }

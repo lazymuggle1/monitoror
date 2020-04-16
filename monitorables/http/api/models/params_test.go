@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	uiConfigModels "github.com/monitoror/monitoror/api/config/models"
-	"github.com/monitoror/monitoror/internal/pkg/monitorable/validator"
 
 	"github.com/AlekSi/pointer"
 	"github.com/stretchr/testify/assert"
@@ -41,11 +40,11 @@ func TestHTTPParams_GetFormat(t *testing.T) {
 		{&HTTPFormattedParams{URL: "http://example.com", Format: "JSON", Key: "key", Regex: "("}, false},
 		{&HTTPFormattedParams{URL: "http://example.com", Format: "JSON", Key: "key", Regex: "(.*)"}, true},
 	} {
-		err := validator.Validate(testcase.params)
+		errors := testcase.params.Validate()
 		if testcase.valid {
-			assert.NoError(t, err)
+			assert.Empty(t, errors)
 		} else {
-			assert.Error(t, err)
+			assert.NotEmpty(t, errors)
 		}
 	}
 }
@@ -67,9 +66,7 @@ func TestHTTPParams_GetRegex(t *testing.T) {
 		{&HTTPFormattedParams{Regex: "(.*)"}, "(.*)", regexp.MustCompile("(.*)")},
 	} {
 		assert.Equal(t, testcase.expectedRegex, testcase.params.GetRegex())
-		if err := validateRegex(testcase.params); err == nil {
-			assert.Equal(t, testcase.expectedRegexp, testcase.params.GetRegexp())
-		}
+		assert.Equal(t, testcase.expectedRegexp, testcase.params.GetRegexp())
 	}
 }
 

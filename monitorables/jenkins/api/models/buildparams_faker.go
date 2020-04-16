@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	uiConfigModels "github.com/monitoror/monitoror/api/config/models"
+	"github.com/monitoror/monitoror/internal/pkg/validator"
 	coreModels "github.com/monitoror/monitoror/models"
 )
 
 type (
 	BuildParams struct {
-		Job    string `json:"job" query:"job"`
+		Job    string `json:"job" query:"job" validate:"required"`
 		Branch string `json:"branch" query:"branch"`
 
 		AuthorName      string `json:"authorName" query:"authorName"`
@@ -27,16 +27,8 @@ type (
 	}
 )
 
-func (p *BuildParams) Validate(_ *uiConfigModels.ConfigVersion) *uiConfigModels.ConfigError {
-	if p.Job == "" {
-		return &uiConfigModels.ConfigError{
-			ID:      uiConfigModels.ConfigErrorMissingRequiredField,
-			Message: fmt.Sprintf(`Required "job" field is missing.`),
-			Data:    uiConfigModels.ConfigErrorData{FieldName: "job"},
-		}
-	}
-
-	return nil
+func (p *BuildParams) Validate() []validator.Error {
+	return validator.Validate(p)
 }
 
 // Used by cache as identifier

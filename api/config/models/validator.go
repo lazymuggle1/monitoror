@@ -2,6 +2,10 @@
 
 package models
 
+import (
+	"github.com/monitoror/monitoror/internal/pkg/validator"
+)
+
 type ParamsValidator interface {
-	Validate(currentVersion *ConfigVersion) *ConfigError
+	Validate() []validator.Error
 }

@@ -3,9 +3,6 @@
 package travisci
 
 import (
-	"fmt"
-	"net/url"
-
 	"github.com/monitoror/monitoror/api/config/versions"
 	pkgMonitorable "github.com/monitoror/monitoror/internal/pkg/monitorable"
 
@@ -52,11 +49,12 @@ func (m *Monitorable) GetVariantsNames() []coreModels.VariantName {
 	return pkgMonitorable.GetVariants(m.config)
 }
 
-func (m *Monitorable) Validate(variantName coreModels.VariantName) (bool, error) {
+func (m *Monitorable) Validate(variantName coreModels.VariantName) (bool, []error) {
 	conf := m.config[variantName]
-	// Error in URL
-	if _, err := url.Parse(conf.URL); err != nil {
-		return false, fmt.Errorf(`%s contains invalid URL: "%s"`, pkgMonitorable.BuildMonitorableEnvKey(conf, variantName, "URL"), conf.URL)
+
+	// Validate Config
+	if errors := pkgMonitorable.ValidateConfig(conf, variantName); errors != nil {
+		return false, errors
 	}
 
 	return true, nil

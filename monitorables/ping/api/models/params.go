@@ -2,26 +2,14 @@
 
 package models
 
-import (
-	"fmt"
-
-	uiConfigModels "github.com/monitoror/monitoror/api/config/models"
-)
+import "github.com/monitoror/monitoror/internal/pkg/validator"
 
 type (
 	PingParams struct {
-		Hostname string `json:"hostname" query:"hostname"`
+		Hostname string `json:"hostname" query:"hostname" validate:"required"`
 	}
 )
 
-func (p *PingParams) Validate(_ *uiConfigModels.ConfigVersion) *uiConfigModels.ConfigError {
-	if p.Hostname == "" {
-		return &uiConfigModels.ConfigError{
-			ID:      uiConfigModels.ConfigErrorMissingRequiredField,
-			Message: fmt.Sprintf(`Required "hostname" field is missing.`),
-			Data:    uiConfigModels.ConfigErrorData{FieldName: "hostname"},
-		}
-	}
-
-	return nil
+func (p *PingParams) Validate() []validator.Error {
+	return validator.Validate(p)
 }

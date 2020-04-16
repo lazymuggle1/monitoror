@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/monitoror/monitoror/api/config/mocks"
-	"github.com/monitoror/monitoror/api/config/models"
+	"github.com/monitoror/monitoror/internal/pkg/validator"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -14,7 +14,7 @@ import (
 
 type FakeValidator map[string]string
 
-func (m *FakeValidator) Validate(_ *models.ConfigVersion) *models.ConfigError { return nil }
+func (m *FakeValidator) Validate() []validator.Error { return []validator.Error{} }
 
 func TestBindAndValidateRequestParams(t *testing.T) {
 	e := echo.New()
@@ -32,8 +32,8 @@ func TestBindAndValidateRequestParams(t *testing.T) {
 	assert.Error(t, BindAndValidateRequestParams(ctx, &fake))
 
 	mockValidator2 := new(mocks.ParamsValidator)
-	mockValidator2.On("Validate", mock.Anything).Return(&models.ConfigError{Message: "boom"})
+	mockValidator2.On("Validate", mock.Anything).Return([]validator.Error{{FieldName: "test"}})
 	err := BindAndValidateRequestParams(ctx, mockValidator2)
 	assert.Error(t, err)
-	assert.Equal(t, "boom", err.Error())
+	assert.Equal(t, `Invalid "test" field.`, err.Error())
 }

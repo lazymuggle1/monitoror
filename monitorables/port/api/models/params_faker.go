@@ -3,9 +3,7 @@
 package models
 
 import (
-	"fmt"
-
-	uiConfigModels "github.com/monitoror/monitoror/api/config/models"
+	"github.com/monitoror/monitoror/internal/pkg/validator"
 	coreModels "github.com/monitoror/monitoror/models"
 )
 
@@ -18,22 +16,6 @@ type (
 	}
 )
 
-func (p *PortParams) Validate(_ *uiConfigModels.ConfigVersion) *uiConfigModels.ConfigError {
-	if p.Hostname == "" {
-		return &uiConfigModels.ConfigError{
-			ID:      uiConfigModels.ConfigErrorMissingRequiredField,
-			Message: fmt.Sprintf(`Required "hostname" field is missing.`),
-			Data:    uiConfigModels.ConfigErrorData{FieldName: "hostname"},
-		}
-	}
-
-	if p.Port == 0 {
-		return &uiConfigModels.ConfigError{
-			ID:      uiConfigModels.ConfigErrorMissingRequiredField,
-			Message: fmt.Sprintf(`Required "port" field is missing.`),
-			Data:    uiConfigModels.ConfigErrorData{FieldName: "port"},
-		}
-	}
-
-	return nil
+func (p *PortParams) Validate() []validator.Error {
+	return validator.Validate(p)
 }

@@ -23,6 +23,17 @@ func TestLoadConfig(t *testing.T) {
 
 }
 
+func TestValidateConfig(t *testing.T) {
+	pingConf := &pingConfig.Ping{}
+	errors := ValidateConfig(pingConf, "test")
+	assert.NotEmpty(t, errors)
+	assert.Equal(t, `Invalid "MO_MONITORABLE_PING_TEST_COUNT" field. Must be greater or equal to 1.`, errors[0].Error())
+
+	pingConf.Count = 2
+	errors = ValidateConfig(pingConf, "test")
+	assert.Empty(t, errors)
+}
+
 func TestGetVariants(t *testing.T) {
 	conf := map[coreModels.VariantName]pingConfig.Ping{
 		"test": {},
@@ -35,9 +46,9 @@ func TestGetVariants(t *testing.T) {
 }
 
 func TestBuildMonitorableEnvKey(t *testing.T) {
-	assert.Equal(t, "MO_MONITORABLE_PING_TEST_TEST", BuildMonitorableEnvKey(pingConfig.Default, "test", "test"))
-	assert.Equal(t, "MO_MONITORABLE_PING_TEST", BuildMonitorableEnvKey(pingConfig.Default, coreModels.DefaultVariant, "test"))
+	assert.Equal(t, "MO_MONITORABLE_PING_TEST_TEST", buildMonitorableEnvKey(pingConfig.Default, "test", "test"))
+	assert.Equal(t, "MO_MONITORABLE_PING_TEST", buildMonitorableEnvKey(pingConfig.Default, coreModels.DefaultVariant, "test"))
 	assert.Panics(t, func() {
-		BuildMonitorableEnvKey("test", "test", "test")
+		buildMonitorableEnvKey("test", "test", "test")
 	})
 }

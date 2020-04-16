@@ -291,6 +291,15 @@ func TestUsecase_VerifyTile_Failed(t *testing.T) {
 			},
 		},
 		{
+			rawConfig: `{ "type": "PORT", "params": { "hostname": "server.com", "port": -20 } }`,
+			errorID:   models.ConfigErrorInvalidFieldValue,
+			errorData: models.ConfigErrorData{
+				FieldName:     "port",
+				ConfigExtract: `{"type":"PORT","params":{"hostname":"server.com","port":-20},"configVariant":"default"}`,
+				Expected:      "port > 0",
+			},
+		},
+		{
 			rawConfig: `{ "type": "PING", "params": { "hostname": ["server.com"] } }`,
 			errorID:   models.ConfigErrorUnexpectedError,
 			errorData: models.ConfigErrorData{

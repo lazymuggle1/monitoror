@@ -1,9 +1,7 @@
 package models
 
 import (
-	"fmt"
-
-	uiConfigModels "github.com/monitoror/monitoror/api/config/models"
+	"github.com/monitoror/monitoror/internal/pkg/validator"
 )
 
 type (
@@ -13,17 +11,12 @@ type (
 	}
 )
 
-func (p *CheckGeneratorParams) Validate(_ *uiConfigModels.ConfigVersion) *uiConfigModels.ConfigError {
+func (p *CheckGeneratorParams) Validate() []validator.Error {
+	errors := validator.Validate(p)
+
 	if p.SortBy != "" && p.SortBy != "name" {
-		return &uiConfigModels.ConfigError{
-			ID:      uiConfigModels.ConfigErrorInvalidFieldValue,
-			Message: fmt.Sprintf(`Required "sortBy" field is missing.`),
-			Data: uiConfigModels.ConfigErrorData{
-				FieldName: "sortBy",
-				Expected:  "name",
-			},
-		}
+		errors = append(errors, *validator.NewError("SortBy", p.SortBy, `"name"`))
 	}
 
-	return nil
+	return errors
 }

@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/monitoror/monitoror/internal/pkg/monitorable/validator"
 )
 
 func TestBuildGeneratorParams_Validate(t *testing.T) {
@@ -14,14 +12,14 @@ func TestBuildGeneratorParams_Validate(t *testing.T) {
 		Match:   ".*",
 		Unmatch: "master",
 	}
-	assert.NoError(t, validator.Validate(param))
+	assert.Len(t, param.Validate(), 0)
 
 	param = &BuildGeneratorParams{}
-	assert.Error(t, validator.Validate(param))
+	assert.Len(t, param.Validate(), 1)
 
 	param = &BuildGeneratorParams{Job: "test", Match: "("}
-	assert.Error(t, validator.Validate(param))
+	assert.Len(t, param.Validate(), 1)
 
 	param = &BuildGeneratorParams{Job: "test", Unmatch: "("}
-	assert.Error(t, validator.Validate(param))
+	assert.Len(t, param.Validate(), 1)
 }

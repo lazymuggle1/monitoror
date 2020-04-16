@@ -41,96 +41,33 @@ func (cu *configUsecase) Verify(configBag *models.ConfigBag) {
 		return
 	}
 
-	// REMOVE
-	if configBag.Config.Columns == nil {
-		configBag.AddErrors(models.ConfigError{
-			ID:      models.ConfigErrorMissingRequiredField,
-			Message: fmt.Sprintf(`Required "columns" field is missing. Must be a positive integer.`),
-			Data: models.ConfigErrorData{
-				FieldName: "columns",
-			},
-		})
-
-		// REMOVE
-	} else if *configBag.Config.Columns <= 0 {
-		configBag.AddErrors(models.ConfigError{
-			ID:      models.ConfigErrorInvalidFieldValue,
-			Message: fmt.Sprintf(`Invalid "columns" field. Must be a positive integer.`),
-			Data: models.ConfigErrorData{
-				FieldName: "columns",
-				Value:     pkgConfig.Stringify(configBag.Config.Columns),
-				Expected:  "columns > 0",
-			},
-		})
-	}
-
-	// REMOVE
-	if configBag.Config.Zoom != nil && (*configBag.Config.Zoom <= 0 || *configBag.Config.Zoom > 10) {
-		configBag.AddErrors(models.ConfigError{
-			ID:      models.ConfigErrorInvalidFieldValue,
-			Message: `Invalid "zoom" field. Must be a positive float between 0 and 10.`,
-			Data: models.ConfigErrorData{
-				FieldName: "zoom",
-				Value:     pkgConfig.Stringify(configBag.Config.Zoom),
-				Expected:  "0 < zoom <= 10",
-			},
-		})
-	}
-
-	// REMOVE
-	if configBag.Config.Tiles == nil {
-		configBag.AddErrors(models.ConfigError{
-			ID:      models.ConfigErrorMissingRequiredField,
-			Message: `Missing "tiles" field. Must be a non-empty array.`,
-			Data: models.ConfigErrorData{
-				FieldName: "tiles",
-			},
-		})
-		// REMOVE
-	} else if len(configBag.Config.Tiles) == 0 {
-		configBag.AddErrors(models.ConfigError{
-			ID:      models.ConfigErrorInvalidFieldValue,
-			Message: `Invalid "tiles" field. Must be a non-empty array.`,
-			Data: models.ConfigErrorData{
-				FieldName:     "tiles",
-				ConfigExtract: pkgConfig.Stringify(configBag.Config),
-			},
-		})
-	} else {
-		// Iterating through every config tiles
-		for _, tile := range configBag.Config.Tiles {
-			cu.verifyTile(configBag, &tile, nil)
+	// Basic validator define in struct
+	if errors := validator.Validate(configBag.Config); len(errors) > 0 {
+		for _, err := range errors {
+			// Custom error message only for tiles and gt tag
+			if err.FieldName == "Tiles" && err.ErrorID == validator.ErrorGT {
+				configBag.AddErrors(models.ConfigError{
+					ID:      models.ConfigErrorMissingRequiredField,
+					Message: `Missing "tiles" field. Must be a non-empty array.`,
+					Data: models.ConfigErrorData{
+						FieldName: "tiles",
+					},
+				})
+			} else {
+				configError := convertValidatorError(&err, configBag.Config)
+				configBag.AddErrors(*configError)
+			}
 		}
+		return
+	}
+
+	// Iterating through every config tiles
+	for _, tile := range configBag.Config.Tiles {
+		cu.verifyTile(configBag, &tile, nil)
 	}
 }
 
 func (cu *configUsecase) verifyTile(configBag *models.ConfigBag, tile *models.TileConfig, groupTile *models.TileConfig) {
-	// REMOVE
-	if tile.ColumnSpan != nil && *tile.ColumnSpan <= 0 {
-		configBag.AddErrors(models.ConfigError{
-			ID:      models.ConfigErrorInvalidFieldValue,
-			Message: `Invalid "columnSpan" field. Must be a positive integer.`,
-			Data: models.ConfigErrorData{
-				FieldName:     "columnSpan",
-				Expected:      "columnSpan > 0",
-				ConfigExtract: pkgConfig.Stringify(tile),
-			},
-		})
-	}
-
-	// REMOVE
-	if tile.RowSpan != nil && *tile.RowSpan <= 0 {
-		configBag.AddErrors(models.ConfigError{
-			ID:      models.ConfigErrorInvalidFieldValue,
-			Message: `Invalid "rowSpan" field. Must be a positive integer.`,
-			Data: models.ConfigErrorData{
-				FieldName:     "rowSpan",
-				Expected:      "rowSpan > 0",
-				ConfigExtract: pkgConfig.Stringify(tile),
-			},
-		})
-	}
-
 	// Empty tile, skip
 	if tile.Type == EmptyTileType {
 		if groupTile != nil {
@@ -357,13 +294,29 @@ func (cu *configUsecase) verifyTile(configBag *models.ConfigBag, tile *models.Ti
 
 	// Validate params instance and convert validator errors into ConfigError and add them into configBag
 	for _, vError := range rInstance.(models.ParamsValidator).Validate() {
-		configError := convertValidatorError(&vError, tile, rInstance)
+		configError := convertValidatorError(&vError, rInstance)
+
+		// Inject Config Extract
+		configError.Data.ConfigExtract = pkgConfig.Stringify(tile)
+
+		// UX HACK: if params is empty, inject "params:{}" to help users
+		if len(tile.Params) == 0 {
+			for _, field := range structs.Fields(tile) {
+				if reflect.DeepEqual(field.Value(), tile.Params) {
+					paramName := pkgConfig.GetJSONFieldName(field)
+					configError.Data.ConfigExtract = strings.TrimSuffix(configError.Data.ConfigExtract, "}")
+					configError.Data.ConfigExtract = fmt.Sprintf(`%s,"%s":{}}`, configError.Data.ConfigExtract, paramName)
+					break
+				}
+			}
+		}
+
 		configBag.AddErrors(*configError)
 	}
 }
 
 // convertValidatorError into models.ConfigError
-func convertValidatorError(vError *validator.Error, tile *models.TileConfig, paramsInstance interface{}) *models.ConfigError {
+func convertValidatorError(vError *validator.Error, instance interface{}) *models.ConfigError {
 	configError := &models.ConfigError{Data: models.ConfigErrorData{}}
 
 	// Convert Error ID
@@ -375,7 +328,7 @@ func convertValidatorError(vError *validator.Error, tile *models.TileConfig, par
 	}
 
 	// Convert FieldName into json fieldName
-	for _, field := range structs.Fields(paramsInstance) {
+	for _, field := range structs.Fields(instance) {
 		if field.Name() == vError.FieldName {
 			// Replace FieldName By json FieldName
 			vError.FieldName = pkgConfig.GetJSONFieldName(field)
@@ -389,21 +342,6 @@ func convertValidatorError(vError *validator.Error, tile *models.TileConfig, par
 
 	// Convert Expected
 	configError.Data.Expected = vError.Expected()
-
-	// Inject Config Extract
-	configError.Data.ConfigExtract = pkgConfig.Stringify(tile)
-
-	// UX HACK: if params is empty, inject "params:{}" to help users
-	if len(tile.Params) == 0 {
-		for _, field := range structs.Fields(tile) {
-			if reflect.DeepEqual(field.Value(), tile.Params) {
-				paramName := pkgConfig.GetJSONFieldName(field)
-				configError.Data.ConfigExtract = strings.TrimSuffix(configError.Data.ConfigExtract, "}")
-				configError.Data.ConfigExtract = fmt.Sprintf(`%s,"%s":{}}`, configError.Data.ConfigExtract, paramName)
-				break
-			}
-		}
-	}
 
 	return configError
 }

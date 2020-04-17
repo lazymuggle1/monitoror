@@ -19,9 +19,7 @@ type (
 )
 
 func (p *HTTPStatusParams) Validate() []validator.Error {
-	errors := validator.Validate(p)
-	errors = append(errors, validateStatusCode(p)...)
-	return errors
+	return validateStatusCode(p)
 }
 
 func (p *HTTPStatusParams) GetURL() (url string) { return p.URL }

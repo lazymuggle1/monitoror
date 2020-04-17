@@ -5,12 +5,14 @@ package models
 import (
 	"time"
 
-	"github.com/monitoror/monitoror/internal/pkg/validator"
+	"github.com/monitoror/monitoror/internal/pkg/monitorable/params"
 	"github.com/monitoror/monitoror/models"
 )
 
 type (
 	ReleaseParams struct {
+		params.Default
+
 		Project    string `json:"project" query:"project" validate:"required"`
 		Definition *int   `json:"definition" query:"definition" validate:"required"`
 
@@ -25,7 +27,3 @@ type (
 		EstimatedDuration int64             `json:"estimatedDuration" query:"estimatedDuration"`
 	}
 )
-
-func (p *BuildParams) Validate() []validator.Error {
-	return validator.Validate(p)
-}

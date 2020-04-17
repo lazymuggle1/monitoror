@@ -4,22 +4,24 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/monitoror/monitoror/internal/pkg/monitorable/test"
+
 	"github.com/AlekSi/pointer"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBuildParams_Validate(t *testing.T) {
 	param := &BuildParams{}
-	assert.Len(t, param.Validate(), 2)
+	test.AssertParams(t, param, 2)
 
 	param.Project = "test"
-	assert.Len(t, param.Validate(), 1)
+	test.AssertParams(t, param, 1)
 
 	param.Definition = pointer.ToInt(1)
-	assert.Len(t, param.Validate(), 0)
+	test.AssertParams(t, param, 0)
 
 	param.Branch = pointer.ToString("test")
-	assert.Len(t, param.Validate(), 0)
+	test.AssertParams(t, param, 0)
 }
 
 func TestBuildParams_String(t *testing.T) {

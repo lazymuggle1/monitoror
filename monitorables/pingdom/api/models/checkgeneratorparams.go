@@ -1,22 +1,14 @@
 package models
 
 import (
-	"github.com/monitoror/monitoror/internal/pkg/validator"
+	"github.com/monitoror/monitoror/internal/pkg/monitorable/params"
 )
 
 type (
 	CheckGeneratorParams struct {
+		params.Default
+
 		Tags   string `json:"tags,omitempty" query:"tags"`
-		SortBy string `json:"sortBy,omitempty" query:"sortBy"`
+		SortBy string `json:"sortBy,omitempty" query:"sortBy" validate:"omitempty,oneof=name"`
 	}
 )
-
-func (p *CheckGeneratorParams) Validate() []validator.Error {
-	errors := validator.Validate(p)
-
-	if p.SortBy != "" && p.SortBy != "name" {
-		errors = append(errors, *validator.NewError("SortBy", p.SortBy, `"name"`))
-	}
-
-	return errors
-}

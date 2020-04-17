@@ -5,19 +5,17 @@ package models
 import (
 	"fmt"
 
-	"github.com/monitoror/monitoror/internal/pkg/validator"
+	"github.com/monitoror/monitoror/internal/pkg/monitorable/params"
 )
 
 type (
 	ReleaseParams struct {
+		params.Default
+
 		Project    string `json:"project" query:"project" validate:"required"`
 		Definition *int   `json:"definition" query:"definition" validate:"required"`
 	}
 )
-
-func (p *ReleaseParams) Validate() []validator.Error {
-	return validator.Validate(p)
-}
 
 // Used by cache as identifier
 func (p *ReleaseParams) String() string {

@@ -39,7 +39,7 @@ const (
 
 func validateStatusCode(params GenericParamsProvider) []validator.Error {
 	if min, max := params.GetStatusCodes(); min > max {
-		return []validator.Error{*validator.NewError("statusCodeMin", fmt.Sprint(min), "statusCodeMin <= statusCodeMax")}
+		return []validator.Error{validator.NewDefaultError("StatusCodeMin", fmt.Sprint(min), "statusCodeMin <= statusCodeMax")}
 	}
 
 	return nil

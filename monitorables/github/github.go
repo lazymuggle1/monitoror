@@ -51,7 +51,7 @@ func (m *Monitorable) GetDisplayName() string {
 }
 
 func (m *Monitorable) GetVariantsNames() []coreModels.VariantName {
-	return pkgMonitorable.GetVariants(m.config)
+	return pkgMonitorable.GetVariantsNames(m.config)
 }
 
 func (m *Monitorable) Validate(variantName coreModels.VariantName) (bool, []error) {

@@ -6,17 +6,19 @@ import (
 
 	"github.com/AlekSi/pointer"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/monitoror/monitoror/internal/pkg/monitorable/test"
 )
 
 func TestReleaseParams_Validate(t *testing.T) {
 	param := &ReleaseParams{}
-	assert.Len(t, param.Validate(), 2)
+	test.AssertParams(t, param, 2)
 
 	param.Project = "test"
-	assert.Len(t, param.Validate(), 1)
+	test.AssertParams(t, param, 1)
 
 	param.Definition = pointer.ToInt(1)
-	assert.Len(t, param.Validate(), 0)
+	test.AssertParams(t, param, 0)
 }
 
 func TestReleaseParams_String(t *testing.T) {

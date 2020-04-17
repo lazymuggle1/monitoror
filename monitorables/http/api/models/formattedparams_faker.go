@@ -5,7 +5,6 @@ package models
 import (
 	"regexp"
 
-	"github.com/monitoror/monitoror/internal/pkg/validator"
 	coreModels "github.com/monitoror/monitoror/models"
 )
 
@@ -25,10 +24,8 @@ type (
 	}
 )
 
-func (p *HTTPFormattedParams) Validate() []validator.Error {
-	errors := validator.Validate(p)
-	errors = append(errors, validateStatusCode(p)...)
-	return errors
+func (p *HTTPFormattedParams) Validate() []validate.error {
+	return validateStatusCode(p)
 }
 
 func (p *HTTPFormattedParams) GetURL() (url string) { return p.URL }

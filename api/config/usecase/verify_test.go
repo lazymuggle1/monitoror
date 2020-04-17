@@ -21,7 +21,7 @@ func initConfig(t *testing.T, rawConfig string) (tiles *models.TileConfig, conf 
 	err := json.Unmarshal([]byte(rawConfig), &tiles)
 	assert.NoError(t, err)
 
-	conf = &models.ConfigBag{Config: &models.Config{Version: models.ParseVersion(versions.CurrentVersion)}}
+	conf = &models.ConfigBag{Config: &models.Config{Version: versions.CurrentVersion.ToConfigVersion()}}
 
 	return
 }
@@ -31,6 +31,7 @@ func TestUsecase_Verify_Success(t *testing.T) {
 {
 	"version" : %q,
   "columns": 4,
+	"zoom": 2.5,
   "tiles": [
 		{ "type": "EMPTY" }
   ]
@@ -101,41 +102,43 @@ func TestUsecase_Verify_Failed(t *testing.T) {
 			rawConfig: fmt.Sprintf(`{"version": %q, "tiles": [{ "type": "EMPTY" }]}`, versions.CurrentVersion),
 			errorID:   models.ConfigErrorMissingRequiredField,
 			errorData: models.ConfigErrorData{
-				FieldName: "columns",
+				FieldName:     "columns",
+				ConfigExtract: fmt.Sprintf(`{"version":%q,"tiles":[{"type":"EMPTY"}]}`, versions.CurrentVersion),
 			},
 		},
 		{
 			rawConfig: fmt.Sprintf(`{"version": %q, "columns": 0, "tiles": [{ "type": "EMPTY" }]}`, versions.CurrentVersion),
 			errorID:   models.ConfigErrorInvalidFieldValue,
 			errorData: models.ConfigErrorData{
-				FieldName: "columns",
-				Value:     `0`,
-				Expected:  "columns > 0",
+				FieldName:     "columns",
+				Expected:      "columns > 0",
+				ConfigExtract: fmt.Sprintf(`{"version":%q,"columns":0,"tiles":[{"type":"EMPTY"}]}`, versions.CurrentVersion),
 			},
 		},
 		{
 			rawConfig: fmt.Sprintf(`{"version": %q, "columns": 1, "zoom": 0, "tiles": [{ "type": "EMPTY" }]}`, versions.CurrentVersion),
 			errorID:   models.ConfigErrorInvalidFieldValue,
 			errorData: models.ConfigErrorData{
-				FieldName: "zoom",
-				Value:     `0`,
-				Expected:  "0 < zoom <= 10",
+				FieldName:     "zoom",
+				Expected:      "zoom > 0",
+				ConfigExtract: fmt.Sprintf(`{"version":%q,"columns":1,"zoom":0,"tiles":[{"type":"EMPTY"}]}`, versions.CurrentVersion),
 			},
 		},
 		{
-			rawConfig: fmt.Sprintf(`{"version": %q, "columns": 1, "zoom": 20, "tiles": [{ "type": "EMPTY" }]}`, versions.CurrentVersion),
+			rawConfig: fmt.Sprintf(`{"version": %q, "columns": 1, "zoom": 19.8, "tiles": [{ "type": "EMPTY" }]}`, versions.CurrentVersion),
 			errorID:   models.ConfigErrorInvalidFieldValue,
 			errorData: models.ConfigErrorData{
-				FieldName: "zoom",
-				Value:     `20`,
-				Expected:  "0 < zoom <= 10",
+				FieldName:     "zoom",
+				Expected:      "zoom <= 10",
+				ConfigExtract: fmt.Sprintf(`{"version":%q,"columns":1,"zoom":19.8,"tiles":[{"type":"EMPTY"}]}`, versions.CurrentVersion),
 			},
 		},
 		{
 			rawConfig: fmt.Sprintf(`{"version": %q, "columns": 1}`, versions.CurrentVersion),
 			errorID:   models.ConfigErrorMissingRequiredField,
 			errorData: models.ConfigErrorData{
-				FieldName: "tiles",
+				FieldName:     "tiles",
+				ConfigExtract: fmt.Sprintf(`{"version":%q,"columns":1}`, versions.CurrentVersion),
 			},
 		},
 		{

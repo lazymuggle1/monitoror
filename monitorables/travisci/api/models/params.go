@@ -5,20 +5,18 @@ package models
 import (
 	"fmt"
 
-	"github.com/monitoror/monitoror/internal/pkg/validator"
+	"github.com/monitoror/monitoror/internal/pkg/monitorable/params"
 )
 
 type (
 	BuildParams struct {
+		params.Default
+
 		Owner      string `json:"owner" query:"owner" validate:"required"`
 		Repository string `json:"repository" query:"repository" validate:"required"`
 		Branch     string `json:"branch" query:"branch" validate:"required"`
 	}
 )
-
-func (p *BuildParams) Validate() []validator.Error {
-	return validator.Validate(p)
-}
 
 // Used by cache as identifier
 func (p *BuildParams) String() string {

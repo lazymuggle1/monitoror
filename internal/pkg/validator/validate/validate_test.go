@@ -1,10 +1,12 @@
-package validator
+package validate
 
 import (
 	"testing"
 
 	"github.com/AlekSi/pointer"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/monitoror/monitoror/internal/pkg/validator"
 )
 
 type Params struct {
@@ -33,14 +35,14 @@ type UnsupportedTagParams struct {
 func TestValidate_WithError(t *testing.T) {
 	for _, testcase := range []struct {
 		params         *Params
-		errorID        ErrorID
+		errorID        validator.ErrorID
 		errorValue     string
 		errorFieldName string
 		errorExpected  string
 	}{
 		{
 			params:         &Params{Token: "xxx"},
-			errorID:        ErrorRequired,
+			errorID:        validator.ErrorRequired,
 			errorFieldName: "URL",
 		},
 		{
@@ -48,7 +50,7 @@ func TestValidate_WithError(t *testing.T) {
 				URL:   pointer.ToString("http%sexemple.com"),
 				Token: "xxx",
 			},
-			errorID:        ErrorURL,
+			errorID:        validator.ErrorURL,
 			errorFieldName: "URL",
 			errorValue:     "http%sexemple.com",
 		},
@@ -57,7 +59,7 @@ func TestValidate_WithError(t *testing.T) {
 				URL:   pointer.ToString("ftp://exemple.com"),
 				Token: "xxx",
 			},
-			errorID:        ErrorHTTP,
+			errorID:        validator.ErrorHTTP,
 			errorFieldName: "URL",
 			errorValue:     "ftp://exemple.com",
 		},
@@ -65,7 +67,7 @@ func TestValidate_WithError(t *testing.T) {
 			params: &Params{
 				URL: pointer.ToString("http://exemple.com"),
 			},
-			errorID:        ErrorRequired,
+			errorID:        validator.ErrorRequired,
 			errorFieldName: "Token",
 		},
 		{
@@ -74,7 +76,7 @@ func TestValidate_WithError(t *testing.T) {
 				Token: "xxxx",
 				Equal: 1000,
 			},
-			errorID:        ErrorEq,
+			errorID:        validator.ErrorEq,
 			errorFieldName: "Equal",
 			errorValue:     "1000",
 			errorExpected:  "Equal = 0",
@@ -85,7 +87,7 @@ func TestValidate_WithError(t *testing.T) {
 				Token:    "xxxx",
 				NotEqual: 1,
 			},
-			errorID:        ErrorNE,
+			errorID:        validator.ErrorNE,
 			errorFieldName: "NotEqual",
 			errorValue:     "1",
 			errorExpected:  "NotEqual != 1",
@@ -96,7 +98,7 @@ func TestValidate_WithError(t *testing.T) {
 				Token:       "xxxx",
 				GreaterThan: -1000,
 			},
-			errorID:        ErrorGT,
+			errorID:        validator.ErrorGT,
 			errorFieldName: "GreaterThan",
 			errorValue:     "-1000",
 			errorExpected:  "GreaterThan > -1",
@@ -107,7 +109,7 @@ func TestValidate_WithError(t *testing.T) {
 				Token:            "xxxx",
 				GreaterThanEqual: -1000,
 			},
-			errorID:        ErrorGTE,
+			errorID:        validator.ErrorGTE,
 			errorFieldName: "GreaterThanEqual",
 			errorValue:     "-1000",
 			errorExpected:  "GreaterThanEqual >= 0",
@@ -118,7 +120,7 @@ func TestValidate_WithError(t *testing.T) {
 				Token:    "xxxx",
 				LessThan: 1000,
 			},
-			errorID:        ErrorLT,
+			errorID:        validator.ErrorLT,
 			errorFieldName: "LessThan",
 			errorValue:     "1000",
 			errorExpected:  "LessThan < 1",
@@ -129,7 +131,7 @@ func TestValidate_WithError(t *testing.T) {
 				Token:         "xxxx",
 				LessThanEqual: 1000,
 			},
-			errorID:        ErrorLTE,
+			errorID:        validator.ErrorLTE,
 			errorFieldName: "LessThanEqual",
 			errorValue:     "1000",
 			errorExpected:  "LessThanEqual <= 0",
@@ -140,7 +142,7 @@ func TestValidate_WithError(t *testing.T) {
 				Token:     "xxxx",
 				Omitempty: pointer.ToInt(0),
 			},
-			errorID:        ErrorGT,
+			errorID:        validator.ErrorGT,
 			errorFieldName: "Omitempty",
 			errorValue:     "0",
 			errorExpected:  "Omitempty > 0",
@@ -151,7 +153,7 @@ func TestValidate_WithError(t *testing.T) {
 				Token: "xxxx",
 				OneOf: "test2",
 			},
-			errorID:        ErrorOneOf,
+			errorID:        validator.ErrorOneOf,
 			errorFieldName: "OneOf",
 			errorValue:     "test2",
 			errorExpected:  "test",
@@ -162,35 +164,36 @@ func TestValidate_WithError(t *testing.T) {
 				Token: "xxxx",
 				Regex: "(",
 			},
-			errorID:        ErrorRegex,
+			errorID:        validator.ErrorRegex,
 			errorFieldName: "Regex",
 			errorValue:     "(",
 		},
 	} {
-		errors := Validate(testcase.params)
+		errors := Struct(testcase.params)
 		assert.NotEmpty(t, errors)
-		assert.Equal(t, testcase.errorID, errors[0].ErrorID)
-		assert.Equal(t, testcase.errorFieldName, errors[0].FieldName)
-		if errors[0].Value != "" {
-			assert.Equal(t, testcase.errorValue, errors[0].Value)
+		castedError := errors[0].(*validateError)
+		assert.Equal(t, testcase.errorID, castedError.errorID)
+		assert.Equal(t, testcase.errorFieldName, castedError.fieldName)
+		if castedError.value != "" {
+			assert.Equal(t, testcase.errorValue, castedError.value)
 		}
-		if errors[0].Expected() != "" {
-			assert.Equal(t, testcase.errorExpected, errors[0].Expected())
+		if castedError.Expected() != "" {
+			assert.Equal(t, testcase.errorExpected, castedError.Expected())
 		}
 	}
 }
 
 func TestValidate_Empty(t *testing.T) {
 	param := &Params{}
-	assert.Len(t, Validate(param), 2)
+	assert.Len(t, Struct(param), 2)
 }
 
 func TestValidate_Panic(t *testing.T) {
 	param1 := &UnsupportedTagParams{}
-	assert.Panics(t, func() { Validate(param1) })
+	assert.Panics(t, func() { Struct(param1) })
 
 	param2 := &ErroredTagParams{}
-	assert.Panics(t, func() { Validate(param2) })
+	assert.Panics(t, func() { Struct(param2) })
 }
 
 func TestValidate_Success(t *testing.T) {
@@ -199,5 +202,5 @@ func TestValidate_Success(t *testing.T) {
 		Token: "xxxx",
 	}
 
-	assert.Len(t, Validate(param), 0)
+	assert.Len(t, Struct(param), 0)
 }

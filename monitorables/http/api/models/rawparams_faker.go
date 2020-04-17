@@ -24,9 +24,7 @@ type (
 )
 
 func (p *HTTPRawParams) Validate() []validator.Error {
-	errors := validator.Validate(p)
-	errors = append(errors, validateStatusCode(p)...)
-	return errors
+	return validateStatusCode(p)
 }
 
 func (p *HTTPRawParams) GetURL() (url string) { return p.URL }

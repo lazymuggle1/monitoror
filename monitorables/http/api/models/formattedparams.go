@@ -20,9 +20,7 @@ type (
 )
 
 func (p *HTTPFormattedParams) Validate() []validator.Error {
-	errors := validator.Validate(p)
-	errors = append(errors, validateStatusCode(p)...)
-	return errors
+	return validateStatusCode(p)
 }
 
 func (p *HTTPFormattedParams) GetURL() (url string) { return p.URL }

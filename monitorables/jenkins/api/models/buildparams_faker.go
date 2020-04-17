@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/monitoror/monitoror/internal/pkg/validator"
+	"github.com/monitoror/monitoror/internal/pkg/monitorable/params"
 	coreModels "github.com/monitoror/monitoror/models"
 )
 
 type (
 	BuildParams struct {
+		params.Default
+
 		Job    string `json:"job" query:"job" validate:"required"`
 		Branch string `json:"branch" query:"branch"`
 
@@ -26,10 +28,6 @@ type (
 		EstimatedDuration int64                 `json:"estimatedDuration" query:"estimatedDuration"`
 	}
 )
-
-func (p *BuildParams) Validate() []validator.Error {
-	return validator.Validate(p)
-}
 
 // Used by cache as identifier
 func (p *BuildParams) String() string {

@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/monitoror/monitoror/internal/pkg/validator"
+	"github.com/monitoror/monitoror/internal/pkg/monitorable/params"
 	coreModels "github.com/monitoror/monitoror/models"
 )
 
 type (
 	ChecksParams struct {
+		params.Default
+
 		Owner      string `json:"owner" query:"owner" validate:"required"`
 		Repository string `json:"repository" query:"repository" validate:"required"`
 		Ref        string `json:"ref" query:"ref" validate:"required"`
@@ -27,10 +29,6 @@ type (
 		EstimatedDuration int64                 `json:"estimatedDuration" query:"estimatedDuration"`
 	}
 )
-
-func (p *ChecksParams) Validate() []validator.Error {
-	return validator.Validate(p)
-}
 
 // Used by cache as identifier
 func (p *ChecksParams) String() string {

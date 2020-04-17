@@ -7,12 +7,12 @@ import (
 
 	coreConfig "github.com/monitoror/monitoror/config"
 	pkgConfig "github.com/monitoror/monitoror/internal/pkg/monitorable/config"
-	"github.com/monitoror/monitoror/internal/pkg/validator"
+	"github.com/monitoror/monitoror/internal/pkg/validator/validate"
 	"github.com/monitoror/monitoror/models"
 	coreModels "github.com/monitoror/monitoror/models"
 )
 
-//LoadConfig load config wrapper for monitorable
+// LoadConfig load config wrapper for monitorable
 func LoadConfig(conf interface{}, defaultConf interface{}) {
 	pkgConfig.LoadConfigWithVariant(fmt.Sprintf("%s_%s", coreConfig.EnvPrefix, coreConfig.MonitorablePrefix), coreModels.DefaultVariant, conf, defaultConf)
 }
@@ -20,10 +20,10 @@ func LoadConfig(conf interface{}, defaultConf interface{}) {
 func ValidateConfig(conf interface{}, variantName coreModels.VariantName) []error {
 	var result []error
 
-	if errors := validator.Validate(conf); len(errors) > 0 {
+	if errors := validate.Struct(conf); len(errors) > 0 {
 		for _, err := range errors {
 			// Replace fieldName by env variable
-			err.FieldName = buildMonitorableEnvKey(conf, variantName, strings.ToUpper(err.FieldName))
+			err.SetFieldName(buildMonitorableEnvKey(conf, variantName, strings.ToUpper(err.GetFieldName())))
 
 			result = append(result, err)
 		}
@@ -32,8 +32,8 @@ func ValidateConfig(conf interface{}, variantName coreModels.VariantName) []erro
 	return result
 }
 
-//buildMonitorableEnvKey rebuild Env variable from config variable
-//a little dirty, but I don't know how to do better
+// buildMonitorableEnvKey rebuild Env variable from config variable
+// a little dirty, but I don't know how to do better
 func buildMonitorableEnvKey(conf interface{}, variantName models.VariantName, variableName string) string {
 	// Verify Params
 	if reflect.ValueOf(conf).Kind() != reflect.Ptr {
@@ -51,8 +51,8 @@ func buildMonitorableEnvKey(conf interface{}, variantName models.VariantName, va
 	return env
 }
 
-//GetVariantsNames extract variants from monitorable config
-func GetVariants(conf interface{}) []models.VariantName {
+// GetVariantsNames extract variants from monitorable config
+func GetVariantsNames(conf interface{}) []models.VariantName {
 	// Verify Params
 	if reflect.ValueOf(conf).Kind() != reflect.Map {
 		panic(fmt.Sprintf("wrong GetVariantsNames parameters: conf need to be a map[coreModels.VariantName] not a %s", reflect.ValueOf(conf).Kind()))

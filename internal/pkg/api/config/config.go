@@ -4,10 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
-
-	"github.com/fatih/structs"
 )
+
+var removeNull *regexp.Regexp
+
+func init() {
+	removeNull = regexp.MustCompile(`\"[^"]+\"\s*:\s*null,?`)
+}
 
 func Keys(m interface{}) string {
 	keys := reflect.ValueOf(m).MapKeys()
@@ -22,9 +27,9 @@ func Keys(m interface{}) string {
 
 func Stringify(v interface{}) string {
 	bytes, _ := json.Marshal(v)
-	return string(bytes)
-}
+	s := string(bytes)
+	s = removeNull.ReplaceAllString(s, ``)
+	s = strings.ReplaceAll(s, `,}`, `}`)
 
-func GetJSONFieldName(field *structs.Field) string {
-	return strings.Split(field.Tag("json"), ",")[0]
+	return s
 }

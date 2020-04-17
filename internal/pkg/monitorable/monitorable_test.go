@@ -34,15 +34,15 @@ func TestValidateConfig(t *testing.T) {
 	assert.Empty(t, errors)
 }
 
-func TestGetVariants(t *testing.T) {
+func TestGetVariantsNames(t *testing.T) {
 	conf := map[coreModels.VariantName]pingConfig.Ping{
 		"test": {},
 	}
 
-	variants := GetVariants(conf)
+	variants := GetVariantsNames(conf)
 	assert.Len(t, variants, 1)
 	assert.Equal(t, coreModels.VariantName("test"), variants[0])
-	assert.Panics(t, func() { GetVariants("test") })
+	assert.Panics(t, func() { GetVariantsNames("test") })
 }
 
 func TestBuildMonitorableEnvKey(t *testing.T) {
